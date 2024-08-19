@@ -16,9 +16,6 @@ const oauthClient = new OAuthClient({
     redirectUri: process.env.REDIRECT_URL // Redirect URI for OAuth callbacks
 });
 
-// if(oauthClient.isAccessTokenValid()) {
-//     console.log("The access_token is valid");
-//  }
  
 const refreshToken = () => {
     if(!oauthClient.isAccessTokenValid()){
@@ -63,9 +60,9 @@ app.get('/callback', async (req, res) => {
 // Route to fetch payments data from QuickBooks
 app.get('/items', async (req, res) => {
     try {
-        // if(!oauthClient.isAccessTokenValid()){
-        //    await this.refreshToken();
-        // }
+        if(!oauthClient.isAccessTokenValid()){
+           await refreshToken();
+        }
         // Make an API call to QuickBooks to fetch payments
         const selectQuery = 'select * from Item'
         const response = await oauthClient.makeApiCall({
@@ -86,7 +83,6 @@ app.get('/items', async (req, res) => {
 // Route to fetch items based on Type and category from QuickBooks
 app.get('/items/filter', async (req, res) => {
     const { category } = req.query;
-    const encodedQuery = encodeURIComponent(category);
 
     if (!category) {
         return res.status(400).send('category is required');
@@ -111,6 +107,33 @@ app.get('/items/filter', async (req, res) => {
     }
 });
 
+app.get('/items/fetchSKU', async (req, res) => {
+    const { SKU } = req.query;
+
+    if (!SKU) {
+        return res.status(400).send('SKU is required');
+    }
+
+    try {
+        // Make an API call to QuickBooks to fetch items based on Type and category
+        // console.log(`https://sandbox-quickbooks.api.intuit.com//v3/company/9341452815412836/query?query=select * from Item where Type='${SKU}'&minorversion=73`);
+        //https://sandbox.qbo.intuit.com/app/items
+        //t-01-12
+
+        const response = await oauthClient.makeApiCall({
+            url: `https://sandbox-quickbooks.api.intuit.com//v3/company/${REALM_ID}/query?query=select * from Item where SKU='${SKU}'&minorversion=${MINOR_VERSION}`,
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        // Send the fetched data as JSON response
+        res.json(response.body);
+    } catch (e) {
+        console.error(e);
+        res.status(500).send('Failed to fetch items');
+    }
+});
 // Route to fetch a specific item by ID
 app.get('/items/:id', async (req, res) => {
     const itemId = Number(req.params.id);
