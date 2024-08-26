@@ -16,7 +16,10 @@ const oauthClient = new OAuthClient({
     redirectUri: process.env.REDIRECT_URL // Redirect URI for OAuth callbacks
 });
 
- 
+const supabase = supabaseClient.createClient({
+    apiKey: '<API_KEY>',
+    project: '<PROJECT_ID>'
+  });
 const refreshToken = () => {
     if(!oauthClient.isAccessTokenValid()){
         oauthClient.refresh()
@@ -30,6 +33,14 @@ const refreshToken = () => {
      
      }
 }
+
+app.get('/', (req, res) => {
+    if(oauthClient.isAccessTokenValid()){
+        res.send("Hello I am working my friend Supabase <3");
+    }
+    res.redirect('/auth');
+
+});
 
 // Route to initiate the OAuth flow
 app.get('/auth', (req, res) => {
