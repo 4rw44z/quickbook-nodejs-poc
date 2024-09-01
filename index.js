@@ -16,10 +16,11 @@ const oauthClient = new OAuthClient({
     redirectUri: process.env.REDIRECT_URL // Redirect URI for OAuth callbacks
 });
 
-const supabase = supabaseClient.createClient({
-    apiKey: '<API_KEY>',
-    project: '<PROJECT_ID>'
-  });
+// const supabase = supabaseClient.createClient({
+//     apiKey: '<API_KEY>',
+//     project: '<PROJECT_ID>'
+//   });
+
 const refreshToken = () => {
     if(!oauthClient.isAccessTokenValid()){
         oauthClient.refresh()
@@ -60,7 +61,7 @@ app.get('/callback', async (req, res) => {
     try {
         // Create an OAuth token using the callback URL
         const authResponse = await oauthClient.createToken(parseRedirect);
-        // Redirect to the payments route after successful authentication
+        // Redirect to the items route after successful authentication
         console.log(authResponse);
         res.redirect('/items');
     } catch (e) {
@@ -68,7 +69,7 @@ app.get('/callback', async (req, res) => {
     }
 });
 
-// Route to fetch payments data from QuickBooks
+// Route to fetch items data from QuickBooks
 app.get('/items', async (req, res) => {
     try {
         if(!oauthClient.isAccessTokenValid()){
